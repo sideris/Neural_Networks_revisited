@@ -20,6 +20,9 @@ __author__ = 'PeterGeorge'
 # otherwise overwrite the set_sets
 #####
 import random
+import math as m
+import numpy as np
+
 
 def sign(x):
     return 1 if x >= 0 else -1
@@ -39,6 +42,7 @@ class BackPropagation:
         self.H = 1000
 
         self.weights_to_hidden = [[-1.0 + (2.0 * random.random()) for i in xrange(self.inputs)] for i in xrange(number_hidden)]
+        self.deltaweights_tohidden = [[0.0 for i in xrange(self.inputs)] for i in xrange(number_hidden)]
 
         self.V = [0.0 for i in xrange(number_hidden)]
         self.threshold_V = [-1.0 + (2.0 * random.random()) for i in xrange(number_hidden)]
@@ -47,6 +51,7 @@ class BackPropagation:
         self.delta_j = [0.0 for i in xrange(number_hidden)]
 
         self.weights_to_out = [[-1.0 + (2.0 * random.random()) for i in xrange(number_hidden)] for i in xrange(number_out)]
+        self.deltaweights_toout = [[0.0 for i in xrange(number_hidden)] for i in xrange(number_out)]
 
         self.O = [0.0 for i in xrange(number_out)]
         self.threshold_O = [-1.0 + (2.0 * random.random()) for i in xrange(number_out)]
@@ -90,7 +95,60 @@ class BackPropagation:
         file_val.close()
 
     def train(self):
-
         tobe_permuted = [i for i in xrange(len(self.training[:]))]
         while self.H >= 1:
-            random.shuffle(tobe_permuted)
+            np.random.permutation(tobe_permuted).tolist()
+            for i in tobe_permuted:
+                #bj and V
+                for j in xrange(self.hidden):
+                    summ = 0
+                    for k in xrange(2):
+                        summ += self.weights_to_hidden[k][j]*self.training[i][k]
+                    self.Bj[j] = summ - self.threshold_V[j]
+                    self.V[j] = m.tanh(self.beta*self.Bj[j])
+                summ = 0
+                for j in xrange(self.hidden):
+                    summ += self.weights_to_out[j]*self.V[j]
+
+                bi = summ - self.threshold_O
+                Oi = m.tanh( self.beta*self.bi)
+
+                #calculate the errors
+                self.delta_i = self.beta(1 - m.tanh(self.beta*bi)**2)*(self.training[i][3] - Oi)
+
+                for ii in xrange(self.training):
+                    self.delta_j[ii] = self.beta*(1 - m.tanh(self.beta*self.Bj(ii))**2)*self.weights_to_out(ii)*self.delta_i
+
+                for i in xrange(self.hidden):
+                    self.deltaweights_toout = self.eta*self.delta_i*self.V[ii]
+
+                for ii in xrange(2):
+                    for jj in xrange(self.hidden):
+                        self.deltaweights_tohidden[ii][jj] = self.eta*self.delta_j[jj]*self.training[i][ii]
+
+                self.delta_threshold_O = -self.eta*self.delta_i
+
+                for ii in xrange(self.hidden):
+                    self.delta_threshhold_V[ii] = -self.eta*self.delta_j[ii]
+
+                #add the thresholds to the weights
+                ##################
+
+    def calculate_states(self):
+        for i in xrange(len(self.training)):
+
+            for j in xrange(self.hidden):
+                summ = 0
+                for k in xrange(2):
+                    summ += self.weights_to_hidden[k][j]*self.training[i][k]
+                self.Bj[j] = summ - self.threshold_V[j]
+                self.V[j] = m.tanh(self.beta*self.Bj[j])
+
+            summ = 0
+            for j in xrange(self.hidden):
+                summ += self.weights_to_out[j]*self.V[j]
+
+            self.Bi = summ - self.threshold_O
+            self.O[i] = m.tanh( self.beta*self.Bi)
+        return self.O
+

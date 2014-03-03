@@ -25,6 +25,12 @@ def sign(x):
 class Hopfield:
     def __init__(self, number_neurons):
         self.neurons = number_neurons
+        self.create()
+
+    def __init__(self, number_neurons, patterns):
+        self.neurons = number_neurons
+        self.set_patterns(patterns)
+        self.create()
 
     def init_weights(self):
         self.weights = [[-1.0 + (2.0 * random.random()) for i in xrange(self.neurons)] for i in xrange(self.neurons)]
